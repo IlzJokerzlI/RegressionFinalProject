@@ -5,7 +5,7 @@ import math
 from decimal import Decimal as Dec
 import decimal
 
-class LinReg:
+class Reg:
     __n:int = 0 # Number of data points
 
     __polOrder:int = 2
@@ -15,12 +15,38 @@ class LinReg:
     __xList:np.ndarray = np.array([])
     __yList:np.ndarray = np.array([])
 
+    # Naive Gauss Elimination Linear Algebra
+    def __linAlg(self, xMatrix:np.ndarray, yMatrix:np.ndarray):
+        matrixSize:int = xMatrix[0].size # The size of matrix
+
+        # Forward Elimination
+        tempMatrix = np.concatenate((xMatrix, yMatrix), axis = 1) # Temporary matrix by concatenating x and y matrix
+        for i in range(matrixSize):
+            for j in range(i + 1, matrixSize):
+                temp = tempMatrix[j][i] / tempMatrix[i][i]
+                tempMatrix[j] = tempMatrix[j] - (np.multiply(tempMatrix[i], temp))
+        
+        # Seperate tempMatrix back into x and y matrix accordingly
+        xMatrix:np.ndarray = tempMatrix[:, :-1]
+        yMatrix:np.ndarray = tempMatrix[:, -1].reshape((matrixSize, 1))
+        
+        # Backward Substitution
+        constantList:np.ndarray = np.zeros((matrixSize, 1), dtype = Dec) # List of constants
+        for i in range(matrixSize):
+            value:Dec = Dec("0") # The value of total sum of rows in x matrix
+            for j in range(i+1):
+                if (i == j):
+                    constantList[matrixSize - i - 1] = ((yMatrix[matrixSize - i - 1][0] - value) / xMatrix[matrixSize - i - 1][matrixSize - j - 1])
+                    break
+                value += xMatrix[matrixSize - i - 1][matrixSize - j - 1] * constantList[j]
+        return constantList
+
     # Calculates polynomial constant
     def __calcPolConstant(self):
         size:int = self.__polOrder + 1
-        temp:list = [self.__n] # List of powered x with initial n (size of xList)
-        xMatrix:np.ndarray = np.zeros((size, size)) # Create a zero 2D matrix
-        yMatrix:np.ndarray = np.zeros((size, 1)) # Create a zero 1D matrix
+        temp:list = [Dec(self.__n)] # List of powered x with initial n (size of xList)
+        xMatrix:np.ndarray = np.zeros((size, size), dtype = Dec) # Create a zero 2D matrix
+        yMatrix:np.ndarray = np.zeros((size, 1), dtype = Dec) # Create a zero 1D matrix
             
         # Filling temp with powered x
         for i in range(1, 2 * size):
@@ -38,7 +64,7 @@ class LinReg:
                 yMatrix[i][0] = np.sum(np.multiply(self.__yList, np.power(self.__xList, i)))
         
         # Calculating the constants (a)
-        self.__polConstant = np.dot(np.linalg.inv(xMatrix),yMatrix) 
+        self.__polConstant = self.__linAlg(xMatrix, yMatrix)
 
     # Inserting xList and yList
     def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([])):
@@ -67,8 +93,6 @@ class LinReg:
                     print(f"Error: {str(e)}")
                 finally:
                     self.__n = self.__xList.size
-                    self.__calcLinGradient()
-                    self.__calcLinConstant()
         else:
             # Conditions for xList and yList input
             if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
@@ -91,8 +115,6 @@ class LinReg:
                     print(f"Error: {str(e)}")
                 finally:
                     self.__n = self.__xList.size
-                    self.__calcLinGradient()
-                    self.__calcLinConstant()
         return -1
 
     # Get list of x axes
@@ -118,7 +140,7 @@ class LinReg:
         return self.__polOrder
 
     def getPolConstant(self):
-        self.__calcPolConstant
+        self.__calcPolConstant()
         print(self.__polConstant)
 
     # def getLinReg():
