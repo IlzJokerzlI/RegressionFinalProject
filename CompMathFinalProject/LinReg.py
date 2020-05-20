@@ -8,28 +8,12 @@ import decimal
 class LinReg:
     __n:int = 0 # Number of data points
 
-    # Linear Regression Data {y = (mNum / mDen)x + constant}
-    __mNum:Dec = 0 # Numerator of gradient
-    __mDen:Dec = 0 # Denominator of gradient
-    __linConstant:Dec = 0 # Constant
-
-    # Polynomial Regression Data {}
     __polOrder:int = 2
     __polConstant:np.ndarray = np.array([])
 
     # Data
     __xList:np.ndarray = np.array([])
     __yList:np.ndarray = np.array([])
-    __yLinearList:np.ndarray = np.array([]) 
-
-    # Calculates linear gradient
-    def __calcLinGradient(self):
-        self.__mNum = ((self.__n * np.multiply(self.__xList, self.__yList).sum()) - (np.multiply(self.__xList.sum(), self.__yList.sum())))
-        self.__mDen = ((self.__n * np.power(self.__xList, 2).sum()) - (np.power(self.__xList.sum(), 2)))
-
-    # Calculates linear constant
-    def __calcLinConstant(self):
-        self.__linConstant = np.mean(self.__yList) - (self.__mNum * np.mean(self.__xList)) / self.__mDen
 
     # Calculates polynomial constant
     def __calcPolConstant(self):
@@ -55,11 +39,6 @@ class LinReg:
         
         # Calculating the constants (a)
         self.__polConstant = np.dot(np.linalg.inv(xMatrix),yMatrix) 
-
-    # The function for prediction using linear regression
-    def fLinReg(self , x:float):
-        x:Dec = Dec(str(x))
-        return self.__mNum * x / self.__mDen + self.__linConstant
 
     # Inserting xList and yList
     def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([])):
@@ -130,19 +109,6 @@ class LinReg:
             return np.array([])
         return self.__yList
 
-    # Get linear gradient
-    def getLinGradient(self):
-        if (self.__n == 0):
-            print("Empty List! Please insert list beforehand!")
-            return -1
-        return self.__mNum / self.__mDen
-
-    # Get linear constant
-    def getLinConstant(self):
-        if (self.__n == 0):
-            print("Empty List! Please insert list beforehand!")
-            return -1
-        return self.__linConstant
 
     # Get size of data (number of data points)
     def getSize(self):
