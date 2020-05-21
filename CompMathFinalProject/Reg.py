@@ -6,16 +6,22 @@ from decimal import Decimal as Dec
 from decimal import DecimalException
 
 class Reg:
-    __n:int = 0 # Number of data points
-
-    __polOrder:int
-    __polConstant:np.ndarray = np.array([])
-
     # Data
+    __n:int = 0 # Number of data points
     __xList:np.ndarray = np.array([])
     __yList:np.ndarray = np.array([])
+
+    # Linear
+    __linConstant:np.ndarray = np.array([])
     __yLinRegList:np.ndarray = np.array([])
+
+    # Polynomial
+    __polOrder:int
+    __polConstant:np.ndarray = np.array([])
     __yPolRegList:np.ndarray = np.array([])
+
+    
+
 
     # Constructor
     def __init__(self, polOrder = 2):
@@ -25,9 +31,11 @@ class Reg:
             self.__polOrder = 2
 
 
+
+
     # Naive Gauss Elimination Linear Algebra
-    def __linAlg(self, xMatrix:np.ndarray, yMatrix:np.ndarray):
-        matrixSize:int = self.__polOrder + 1 # The size of matrix
+    def __linAlg(self, xMatrix:np.ndarray, yMatrix:np.ndarray, order:int):
+        matrixSize:int = order + 1 # The size of matrix
 
         # Forward Elimination
         tempMatrix = np.concatenate((xMatrix, yMatrix), axis = 1) # Temporary matrix by concatenating x and y matrix
@@ -52,9 +60,9 @@ class Reg:
         return constantList
 
 
-    # Calculates polynomial constant
-    def __calcPolConstant(self):
-        size:int = self.__polOrder + 1
+    # Calculates constant
+    def __calcConstant(self, order:int):
+        size:int = order + 1 # Size of matrix based on the order
         temp:list = [Dec(self.__n)] # List of powered x with initial n (size of xList)
         xMatrix:np.ndarray = np.zeros((size, size), dtype = Dec) # Create a zero 2D matrix
         yMatrix:np.ndarray = np.zeros((size, 1), dtype = Dec) # Create a zero 1D matrix
@@ -74,17 +82,25 @@ class Reg:
             else:
                 yMatrix[i][0] = np.sum(np.multiply(self.__yList, np.power(self.__xList, i)))
         
-        # Calculating the constants (a)
-        self.__polConstant = self.__linAlg(xMatrix, yMatrix)
+        # Calculating the constants
+        if (order == 1):
+            self.__linConstant = self.__linAlg(xMatrix, yMatrix, order)
+        else:
+            self.__polConstant = self.__linAlg(xMatrix, yMatrix, order)
 
 
     # Calculates y axes in polynomial regression line of given x axes
-    def __calcPolReg(self):
-        tempMatrix:np.ndarray = np.multiply(np.ones((self.__polOrder + 1, self.__n), dtype = Dec), self.__xList).transpose() # Create temporary matrix for list of x
-        power:np.ndarray = np.arange(0, self.__polOrder + 1, dtype = Dec) # The power of the x
+    def __calcReg(self, order:int):
+        tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self.__n), dtype = Dec), self.__xList).transpose() # Create temporary matrix for list of x
+        power:np.ndarray = np.arange(0, order + 1, dtype = Dec) # The power of the x
         
         # Calculate the y axes
-        self.__yPolRegList = np.sum(np.multiply(np.power(tempMatrix, power), self.__polConstant.transpose()), axis = 1)
+        if (order == 1):
+            self.__yLinRegList = np.sum(np.multiply(np.power(tempMatrix, power), self.__linConstant.transpose()), axis = 1)
+        else:
+            self.__yPolRegList = np.sum(np.multiply(np.power(tempMatrix, power), self.__polConstant.transpose()), axis = 1)
+
+
 
     # Inserting xList and yList
     def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([])):
@@ -114,6 +130,10 @@ class Reg:
                 finally:
                     # Set the number of data points
                     self.__n = self.__xList.size
+                    self.__calcConstant(1)
+                    self.__calcConstant(self.__polOrder)
+                    self.__calcReg(1)
+                    self.__calcReg(self.__polOrder)
         else:
             # Conditions for xList and yList input
             if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
@@ -137,6 +157,10 @@ class Reg:
                 finally:
                     # Set the number of data points
                     self.__n = self.__xList.size
+                    self.__calcConstant(1)
+                    self.__calcConstant(self.__polOrder)
+                    self.__calcReg(1)
+                    self.__calcReg(self.__polOrder)
         return -1
 
 
@@ -175,28 +199,58 @@ class Reg:
         return 0
 
 
+    # Get linear constant
+    def getLinConstant(self):
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        return self.__linConstant
+
+
     # Get polinomial constant
     def getPolConstant(self):
-        self.__calcPolConstant()
-        print(self.__polConstant)
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        return self.__polConstant
+
+
+    # Get list of y axes in linear regression line
+    def getYLinReg(self):
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        return self.__yLinRegList
 
 
     # Get list of y axes in polynomial regression line
     def getYPolReg(self):
-        self.__calcPolReg()
-        print(self.__yPolRegList)
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        return self.__yPolRegList
+
+
+    # Predict y axes at linear regression with given x
+    def getLinF(self, x:float):
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        x:Dec = Dec(str(x))
+        power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec)
+
+        return np.multiply(np.power(np.full(1 + 1, x), power), self.__polConstant.transpose()).sum()
 
 
     # Predict y axes at polynomial regression with given x
-    def f(self, x:float):
+    def getPolF(self, x:float):
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
         x:Dec = Dec(str(x))
         power:np.ndarray = np.arange(0, self.__polOrder + 1, dtype = Dec)
 
         return np.multiply(np.power(np.full(self.__polOrder + 1, x), power), self.__polConstant.transpose()).sum()
-
-    # def getLinReg():
-    #     m
-
 
     # def plotGraph():
     #     return
