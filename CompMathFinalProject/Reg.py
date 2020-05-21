@@ -14,6 +14,8 @@ class Reg:
     # Data
     __xList:np.ndarray = np.array([])
     __yList:np.ndarray = np.array([])
+    __yLinRegList:np.ndarray = np.array([])
+    __yPolRegList:np.ndarray = np.array([])
 
     # Naive Gauss Elimination Linear Algebra
     def __linAlg(self, xMatrix:np.ndarray, yMatrix:np.ndarray):
@@ -31,14 +33,14 @@ class Reg:
         yMatrix:np.ndarray = tempMatrix[:, -1].reshape((matrixSize, 1))
         
         # Backward Substitution
-        constantList:np.ndarray = np.zeros((matrixSize, 1), dtype = Dec) # List of constants
+        constantList:np.ndarray = np.ones((matrixSize, 1), dtype=Dec) # List of constants
         for i in range(matrixSize):
             value:Dec = Dec("0") # The value of total sum of rows in x matrix
             for j in range(i+1):
                 if (i == j):
-                    constantList[matrixSize - i - 1] = ((yMatrix[matrixSize - i - 1][0] - value) / xMatrix[matrixSize - i - 1][matrixSize - j - 1])
+                    constantList[matrixSize - j - 1][0] = (yMatrix[matrixSize - i - 1][0] - value) / xMatrix[matrixSize - i - 1][matrixSize - j - 1]
                     break
-                value += xMatrix[matrixSize - i - 1][matrixSize - j - 1] * constantList[j]
+                value += xMatrix[matrixSize - i - 1][matrixSize - j - 1] * constantList[matrixSize - j - 1][0]
         return constantList
 
     # Calculates polynomial constant
@@ -66,6 +68,9 @@ class Reg:
         # Calculating the constants (a)
         self.__polConstant = self.__linAlg(xMatrix, yMatrix)
 
+    # def __calcPolReg(self):
+        
+
     # Inserting xList and yList
     def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([])):
         if (not isinstance(xList, np.ndarray) or not isinstance(yList, np.ndarray)):
@@ -79,12 +84,12 @@ class Reg:
                 # Return -1 if both xList and yList are empty
                 print("Empty List!")
             elif (not isinstance(xList[0], np.ndarray) or xList[0].size != 2):
-                # Return -1 if xList does not contains numpy.ndarray, which means there is at least one data has different size (turns np.ndarray type to list)
+                # Return -1 if xList's elements are not numpy.ndarray, which means there is at least one data has different size (turns np.ndarray type to list)
                 # Return -1 if coordinate has insufficient or extra axes
                 print("Invalid Amount of Axes! A Coordinate must only contain (x,y) axes!")
             else:
-                # Make input x and y axes in coordinateList as object's variable (converts int, string, or float to Decimal data type)
                 try:
+                    # Make input x and y axes in coordinateList as object's variable (converts int, string, or float to Decimal data type)
                     self.__xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self.__yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
                     return 0
@@ -92,6 +97,7 @@ class Reg:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
                 finally:
+                    # Set the number of data points
                     self.__n = self.__xList.size
         else:
             # Conditions for xList and yList input
@@ -105,8 +111,8 @@ class Reg:
                 # Return -1 if the data in the lists are less than 2 (results in insufficient data)
                 print("Insufficient data in lists!")
             else:
-                # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
                 try:
+                    # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
                     self.__xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
                     self.__yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
                     return 0
@@ -114,6 +120,7 @@ class Reg:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
                 finally:
+                    # Set the number of data points
                     self.__n = self.__xList.size
         return -1
 
@@ -131,14 +138,23 @@ class Reg:
             return np.array([])
         return self.__yList
 
-
     # Get size of data (number of data points)
     def getSize(self):
         return self.__n
 
+    # Get polinomial order
     def getPolOrder(self):
         return self.__polOrder
 
+    # Set Polinomial order
+    def setPolOrder(self, order:int):
+        if (order < 2):
+            print("Order must not be less than 2!")
+            return -1
+        self.__polOrder = order
+        return 0
+
+    # Get polinomial constant
     def getPolConstant(self):
         self.__calcPolConstant()
         print(self.__polConstant)
