@@ -3,12 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import math
 from decimal import Decimal as Dec
-import decimal
+from decimal import DecimalException
 
 class Reg:
     __n:int = 0 # Number of data points
 
-    __polOrder:int = 2
+    __polOrder:int
     __polConstant:np.ndarray = np.array([])
 
     # Data
@@ -17,9 +17,17 @@ class Reg:
     __yLinRegList:np.ndarray = np.array([])
     __yPolRegList:np.ndarray = np.array([])
 
+    # Constructor
+    def __init__(self, polOrder = 2):
+        if (polOrder >= 2):
+            self.__polOrder = polOrder
+        else:
+            self.__polOrder = 2
+
+
     # Naive Gauss Elimination Linear Algebra
     def __linAlg(self, xMatrix:np.ndarray, yMatrix:np.ndarray):
-        matrixSize:int = xMatrix[0].size # The size of matrix
+        matrixSize:int = self.__polOrder + 1 # The size of matrix
 
         # Forward Elimination
         tempMatrix = np.concatenate((xMatrix, yMatrix), axis = 1) # Temporary matrix by concatenating x and y matrix
@@ -33,7 +41,7 @@ class Reg:
         yMatrix:np.ndarray = tempMatrix[:, -1].reshape((matrixSize, 1))
         
         # Backward Substitution
-        constantList:np.ndarray = np.ones((matrixSize, 1), dtype=Dec) # List of constants
+        constantList:np.ndarray = np.ones((matrixSize, 1), dtype = Dec) # List of constants
         for i in range(matrixSize):
             value:Dec = Dec("0") # The value of total sum of rows in x matrix
             for j in range(i+1):
@@ -42,6 +50,7 @@ class Reg:
                     break
                 value += xMatrix[matrixSize - i - 1][matrixSize - j - 1] * constantList[matrixSize - j - 1][0]
         return constantList
+
 
     # Calculates polynomial constant
     def __calcPolConstant(self):
@@ -68,8 +77,14 @@ class Reg:
         # Calculating the constants (a)
         self.__polConstant = self.__linAlg(xMatrix, yMatrix)
 
-    # def __calcPolReg(self):
+
+    # Calculates y axes in polynomial regression line of given x axes
+    def __calcPolReg(self):
+        tempMatrix:np.ndarray = np.multiply(np.ones((self.__polOrder + 1, self.__n), dtype = Dec), self.__xList).transpose() # Create temporary matrix for list of x
+        power:np.ndarray = np.arange(0, self.__polOrder + 1, dtype = Dec) # The power of the x
         
+        # Calculate the y axes
+        self.__yPolRegList = np.sum(np.multiply(np.power(tempMatrix, power), self.__polConstant.transpose()), axis = 1)
 
     # Inserting xList and yList
     def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([])):
@@ -93,7 +108,7 @@ class Reg:
                     self.__xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self.__yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
                     return 0
-                except decimal.DecimalException as e:
+                except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
                 finally:
@@ -116,13 +131,14 @@ class Reg:
                     self.__xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
                     self.__yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
                     return 0
-                except decimal.DecimalException as e:
+                except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
                 finally:
                     # Set the number of data points
                     self.__n = self.__xList.size
         return -1
+
 
     # Get list of x axes
     def getXList(self):
@@ -131,6 +147,7 @@ class Reg:
             return np.array([])
         return self.__xList
 
+
     # Get list of y axes
     def getYList(self):
         if (self.__n == 0):
@@ -138,13 +155,16 @@ class Reg:
             return np.array([])
         return self.__yList
 
+
     # Get size of data (number of data points)
     def getSize(self):
         return self.__n
 
+
     # Get polinomial order
     def getPolOrder(self):
         return self.__polOrder
+
 
     # Set Polinomial order
     def setPolOrder(self, order:int):
@@ -154,10 +174,25 @@ class Reg:
         self.__polOrder = order
         return 0
 
+
     # Get polinomial constant
     def getPolConstant(self):
         self.__calcPolConstant()
         print(self.__polConstant)
+
+
+    # Get list of y axes in polynomial regression line
+    def getYPolReg(self):
+        self.__calcPolReg()
+        print(self.__yPolRegList)
+
+
+    # Predict y axes at polynomial regression with given x
+    def f(self, x:float):
+        x:Dec = Dec(str(x))
+        power:np.ndarray = np.arange(0, self.__polOrder + 1, dtype = Dec)
+
+        return np.multiply(np.power(np.full(self.__polOrder + 1, x), power), self.__polConstant.transpose()).sum()
 
     # def getLinReg():
     #     m
