@@ -93,6 +93,7 @@ class Reg:
     def __calcReg(self, xList:np.ndarray, constant:np.ndarray, order:int):
         tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self.__n), dtype = Dec), xList).transpose() # Create temporary matrix for list of x
         power:np.ndarray = np.arange(0, order + 1, dtype = Dec) # The power of the x
+        tempMatrix[:,0][tempMatrix[:,0] == 0] = Dec(1)
 
         return np.sum(np.multiply(np.power(tempMatrix, power), constant.transpose()), axis = 1)
 
@@ -107,8 +108,14 @@ class Reg:
         self.__yPolRegList = self.__calcReg(self.__xList, self.__polConstant, self.__polOrder)
 
 
-    # def __calcExpReg(self):
-    #     self.__expConstant = self.__calcConstant(self.__xList, self.__yList, 1)
+    def __calcExpReg(self):
+        f = lambda x : x.ln()
+        vf = np.vectorize(f)
+
+        temp:np.ndarray = self.__calcConstant(self.__xList, vf(self.__yList), 1)
+        temp[0][0] = temp[0][0].exp()
+        self.__expConstant = temp
+        self.__yExpRegList = np.multiply(np.exp(np.multiply(self.__expConstant[1][0], self.__xList)), self.__expConstant[0][0])
 
 
     # Inserting xList and yList
@@ -141,6 +148,7 @@ class Reg:
                     self.__n = self.__xList.size
                     self.__calcLinReg()
                     self.__calcPolReg()
+                    self.__calcExpReg()
         else:
             # Conditions for xList and yList input
             if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
@@ -166,6 +174,7 @@ class Reg:
                     self.__n = self.__xList.size
                     self.__calcLinReg()
                     self.__calcPolReg()
+                    self.__calcExpReg()
         return -1
 
 
