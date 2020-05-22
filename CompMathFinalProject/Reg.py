@@ -20,6 +20,9 @@ class Reg:
     __polConstant:np.ndarray = np.array([])
     __yPolRegList:np.ndarray = np.array([])
 
+    # Exponential
+    __expConstant:np.ndarray = np.array([])
+    __yExpRegList:np.ndarray = np.array([])
     
 
 
@@ -61,7 +64,7 @@ class Reg:
 
 
     # Calculates constant
-    def __calcConstant(self, order:int):
+    def __calcConstant(self, xList:np.ndarray, yList:np.ndarray, order:int):
         size:int = order + 1 # Size of matrix based on the order
         temp:list = [Dec(self.__n)] # List of powered x with initial n (size of xList)
         xMatrix:np.ndarray = np.zeros((size, size), dtype = Dec) # Create a zero 2D matrix
@@ -69,7 +72,7 @@ class Reg:
             
         # Filling temp with powered x
         for i in range(1, 2 * size):
-            temp.append(np.sum(np.power(self.__xList,i)))
+            temp.append(np.sum(np.power(xList,i)))
 
         # Filling zero 2D matrix (xMatrix) with the powered x in temp
         for i in range(size):
@@ -78,28 +81,34 @@ class Reg:
         # Filling zero 1D matrix (yMatrix)
         for i in range(size):
             if (i == 0):
-                yMatrix[i][0] = np.sum(self.__yList)
+                yMatrix[i][0] = np.sum(yList)
             else:
-                yMatrix[i][0] = np.sum(np.multiply(self.__yList, np.power(self.__xList, i)))
+                yMatrix[i][0] = np.sum(np.multiply(yList, np.power(xList, i)))
         
         # Calculating the constants
-        if (order == 1):
-            self.__linConstant = self.__linAlg(xMatrix, yMatrix, order)
-        else:
-            self.__polConstant = self.__linAlg(xMatrix, yMatrix, order)
+        return self.__linAlg(xMatrix, yMatrix, order)
 
 
     # Calculates y axes in polynomial regression line of given x axes
-    def __calcReg(self, order:int):
-        tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self.__n), dtype = Dec), self.__xList).transpose() # Create temporary matrix for list of x
+    def __calcReg(self, xList:np.ndarray, constant:np.ndarray, order:int):
+        tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self.__n), dtype = Dec), xList).transpose() # Create temporary matrix for list of x
         power:np.ndarray = np.arange(0, order + 1, dtype = Dec) # The power of the x
-        
-        # Calculate the y axes
-        if (order == 1):
-            self.__yLinRegList = np.sum(np.multiply(np.power(tempMatrix, power), self.__linConstant.transpose()), axis = 1)
-        else:
-            self.__yPolRegList = np.sum(np.multiply(np.power(tempMatrix, power), self.__polConstant.transpose()), axis = 1)
 
+        return np.sum(np.multiply(np.power(tempMatrix, power), constant.transpose()), axis = 1)
+
+
+    def __calcLinReg(self):
+        self.__linConstant = self.__calcConstant(self.__xList, self.__yList, 1)
+        self.__yLinRegList = self.__calcReg(self.__xList, self.__linConstant, 1)
+
+
+    def __calcPolReg(self):
+        self.__polConstant = self.__calcConstant(self.__xList, self.__yList, self.__polOrder)
+        self.__yPolRegList = self.__calcReg(self.__xList, self.__polConstant, self.__polOrder)
+
+
+    # def __calcExpReg(self):
+    #     self.__expConstant = self.__calcConstant(self.__xList, self.__yList, 1)
 
 
     # Inserting xList and yList
@@ -130,10 +139,8 @@ class Reg:
                 finally:
                     # Set the number of data points
                     self.__n = self.__xList.size
-                    self.__calcConstant(1)
-                    self.__calcConstant(self.__polOrder)
-                    self.__calcReg(1)
-                    self.__calcReg(self.__polOrder)
+                    self.__calcLinReg()
+                    self.__calcPolReg()
         else:
             # Conditions for xList and yList input
             if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
@@ -157,10 +164,8 @@ class Reg:
                 finally:
                     # Set the number of data points
                     self.__n = self.__xList.size
-                    self.__calcConstant(1)
-                    self.__calcConstant(self.__polOrder)
-                    self.__calcReg(1)
-                    self.__calcReg(self.__polOrder)
+                    self.__calcLinReg()
+                    self.__calcPolReg()
         return -1
 
 
