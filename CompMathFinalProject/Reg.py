@@ -12,17 +12,20 @@ class Reg:
     __yList:np.ndarray = np.array([])
 
     # Linear
-    __linConstant:np.ndarray = np.array([])
-    __yLinRegList:np.ndarray = np.array([])
+    __linCoeff:np.ndarray = np.array([])
+    __linYRegList:np.ndarray = np.array([])
+    __linStdErr:Dec = Dec("0")
 
     # Polynomial
     __polOrder:int
-    __polConstant:np.ndarray = np.array([])
-    __yPolRegList:np.ndarray = np.array([])
+    __polCoeff:np.ndarray = np.array([])
+    __polYRegList:np.ndarray = np.array([])
+    __polStdErr:Dec = Dec("0")
 
     # Exponential
-    __expConstant:np.ndarray = np.array([])
-    __yExpRegList:np.ndarray = np.array([])
+    __expCoeff:np.ndarray = np.array([])
+    __expYRegList:np.ndarray = np.array([])
+    __expStdErr:Dec = Dec("0")
     
 
 
@@ -34,6 +37,11 @@ class Reg:
             self.__polOrder = 2
 
 
+
+
+    # Calculates standard error
+    def __calcStdErr(self, yList:np.ndarray, yRegList:np.ndarray):
+        return np.sqrt(np.power(np.subtract(yRegList, yList), 2).sum() / (yList.size - 2))
 
 
     # Naive Gauss Elimination Linear Algebra
@@ -52,19 +60,19 @@ class Reg:
         yMatrix:np.ndarray = tempMatrix[:, -1].reshape((matrixSize, 1))
         
         # Backward Substitution
-        constantList:np.ndarray = np.ones((matrixSize, 1), dtype = Dec) # List of constants
+        coeffList:np.ndarray = np.ones((matrixSize, 1), dtype = Dec) # List of coefficient
         for i in range(matrixSize):
             value:Dec = Dec("0") # The value of total sum of rows in x matrix
             for j in range(i+1):
                 if (i == j):
-                    constantList[matrixSize - j - 1][0] = (yMatrix[matrixSize - i - 1][0] - value) / xMatrix[matrixSize - i - 1][matrixSize - j - 1]
+                    coeffList[matrixSize - j - 1][0] = (yMatrix[matrixSize - i - 1][0] - value) / xMatrix[matrixSize - i - 1][matrixSize - j - 1]
                     break
-                value += xMatrix[matrixSize - i - 1][matrixSize - j - 1] * constantList[matrixSize - j - 1][0]
-        return constantList
+                value += xMatrix[matrixSize - i - 1][matrixSize - j - 1] * coeffList[matrixSize - j - 1][0]
+        return coeffList
 
 
-    # Calculates constant
-    def __calcConstant(self, xList:np.ndarray, yList:np.ndarray, order:int):
+    # Calculates coefficient
+    def __calcCoeff(self, xList:np.ndarray, yList:np.ndarray, order:int):
         size:int = order + 1 # Size of matrix based on the order
         temp:list = [Dec(self.__n)] # List of powered x with initial n (size of xList)
         xMatrix:np.ndarray = np.zeros((size, size), dtype = Dec) # Create a zero 2D matrix
@@ -85,37 +93,40 @@ class Reg:
             else:
                 yMatrix[i][0] = np.sum(np.multiply(yList, np.power(xList, i)))
         
-        # Calculating the constants
+        # Calculating the coefficient
         return self.__linAlg(xMatrix, yMatrix, order)
 
 
     # Calculates y axes in polynomial regression line of given x axes
-    def __calcReg(self, xList:np.ndarray, constant:np.ndarray, order:int):
+    def __calcReg(self, xList:np.ndarray, coeff:np.ndarray, order:int):
         tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self.__n), dtype = Dec), xList).transpose() # Create temporary matrix for list of x
         power:np.ndarray = np.arange(0, order + 1, dtype = Dec) # The power of the x
         tempMatrix[:,0][tempMatrix[:,0] == 0] = Dec(1)
 
-        return np.sum(np.multiply(np.power(tempMatrix, power), constant.transpose()), axis = 1)
+        return np.sum(np.multiply(np.power(tempMatrix, power), coeff.transpose()), axis = 1)
 
 
     def __calcLinReg(self):
-        self.__linConstant = self.__calcConstant(self.__xList, self.__yList, 1)
-        self.__yLinRegList = self.__calcReg(self.__xList, self.__linConstant, 1)
+        self.__linCoeff = self.__calcCoeff(self.__xList, self.__yList, 1)
+        self.__linYRegList = self.__calcReg(self.__xList, self.__linCoeff, 1)
+        self.__expStdErr = self.__calcStdErr(self.__yList, self.__linYRegList)
 
 
     def __calcPolReg(self):
-        self.__polConstant = self.__calcConstant(self.__xList, self.__yList, self.__polOrder)
-        self.__yPolRegList = self.__calcReg(self.__xList, self.__polConstant, self.__polOrder)
+        self.__polCoeff = self.__calcCoeff(self.__xList, self.__yList, self.__polOrder)
+        self.__polYRegList = self.__calcReg(self.__xList, self.__polCoeff, self.__polOrder)
+        self.__expStdErr = self.__calcStdErr(self.__yList, self.__polYRegList)
 
 
     def __calcExpReg(self):
         f = lambda x : x.ln()
         vf = np.vectorize(f)
 
-        temp:np.ndarray = self.__calcConstant(self.__xList, vf(self.__yList), 1)
+        temp:np.ndarray = self.__calcCoeff(self.__xList, vf(self.__yList), 1)
         temp[0][0] = temp[0][0].exp()
-        self.__expConstant = temp
-        self.__yExpRegList = np.multiply(np.exp(np.multiply(self.__expConstant[1][0], self.__xList)), self.__expConstant[0][0])
+        self.__expCoeff = temp
+        self.__expYRegList = np.multiply(np.exp(np.multiply(self.__expCoeff[1][0], self.__xList)), self.__expCoeff[0][0])
+        self.__expStdErr = self.__calcStdErr(self.__yList, self.__expYRegList)
 
 
     # Inserting xList and yList
@@ -213,36 +224,52 @@ class Reg:
         return 0
 
 
-    # Get linear constant
-    def getLinConstant(self):
+    # Get linear coefficient
+    def getLinCoeff(self):
         if (self.__n == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__linConstant
+        return self.__linCoeff
 
 
-    # Get polinomial constant
-    def getPolConstant(self):
+    # Get polinomial coefficient
+    def getPolCoeff(self):
         if (self.__n == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__polConstant
+        return self.__polCoeff
+
+
+    # Get exponential coefficient
+    def getExpCoeff(self):
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        return self.__expCoeff
 
 
     # Get list of y axes in linear regression line
-    def getYLinReg(self):
+    def getLinYReg(self):
         if (self.__n == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__yLinRegList
+        return self.__linYRegList
 
 
     # Get list of y axes in polynomial regression line
-    def getYPolReg(self):
+    def getPolYReg(self):
         if (self.__n == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__yPolRegList
+        return self.__polYRegList
+
+
+    # Get list of y axes in exponential regression line  
+    def getExpYReg(self):
+        if (self.__n == 0):
+            print("Empty List! Please insert list beforehand!")
+            return np.array([])
+        return self.__expYRegList
 
 
     # Predict y axes at linear regression with given x
@@ -253,7 +280,7 @@ class Reg:
         x:Dec = Dec(str(x))
         power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec)
 
-        return np.multiply(np.power(np.full(1 + 1, x), power), self.__polConstant.transpose()).sum()
+        return np.multiply(np.power(np.full(1 + 1, x), power), self.__polCoeff.transpose()).sum()
 
 
     # Predict y axes at polynomial regression with given x
@@ -264,7 +291,7 @@ class Reg:
         x:Dec = Dec(str(x))
         power:np.ndarray = np.arange(0, self.__polOrder + 1, dtype = Dec)
 
-        return np.multiply(np.power(np.full(self.__polOrder + 1, x), power), self.__polConstant.transpose()).sum()
+        return np.multiply(np.power(np.full(self.__polOrder + 1, x), power), self.__polCoeff.transpose()).sum()
 
     # def plotGraph():
     #     return
