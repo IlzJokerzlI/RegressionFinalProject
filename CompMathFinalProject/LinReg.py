@@ -8,6 +8,7 @@ from Reg import Reg
 
 
 class LinReg(Reg):
+    # Data
     __order:int = 1
 
     __coeffList:np.ndarray
@@ -17,6 +18,7 @@ class LinReg(Reg):
 
 
 
+    # Linear regression calculations
     def __calcLinReg(self):
         self.__coeffList = self._calcCoeff(self._xList, self._yList, self.__order)
         self.__regList = self._calcReg(self._xList, self.__coeffList, self.__order)
@@ -79,7 +81,7 @@ class LinReg(Reg):
         return -1
 
     
-    # Get linear coefficient
+    # Get coefficient
     def getCoeff(self):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
@@ -95,7 +97,7 @@ class LinReg(Reg):
         return self.__stdErr
 
 
-    # Get list of y axes in linear regression line
+    # Get list of y axes of regression line
     def getReg(self):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
@@ -103,7 +105,7 @@ class LinReg(Reg):
         return self.__regList
 
 
-    # Predict y axes at linear regression with given x
+    # Predict y axes at regression line with given x
     def f(self, x:float):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
@@ -124,12 +126,18 @@ class LinReg(Reg):
         regList = self.__regList.astype(float)
 
         fig, ax = plt.subplots(figsize = (20,15))
+
+        # Set title
+        ax.set_title(f"Linear Regression Graph\nrange({xList.min()} - {xList.max()})")
+
+        # Plot line graph
         ax.plot(xList, regList,
-                label = "Exponential Line",
+                label = "Linear Regression Line",
                 marker = "x",
                 markersize = 10,
                 zorder = 0.5)
 
+        # Plot scatter graph
         ax.scatter(xList, yList,
                    label = "Sample Data",
                    marker = "o",
@@ -138,13 +146,18 @@ class LinReg(Reg):
                    alpha = 0.8,
                    zorder =1)
 
+        # Legend
         ax.legend(title = "Legend",
                   fontsize = "large")
 
+        # Grid
         ax.grid(which = "both")
+
+        # Ticks
         ax.xaxis.set_major_locator(FixedLocator(xList))
         ax.yaxis.set_major_locator(FixedLocator(yList))
         ax.xaxis.set_minor_locator(AutoMinorLocator(4))
         ax.yaxis.set_minor_locator(AutoMinorLocator(10))
 
-        plt.plot()
+        plt.show()
+        return 0

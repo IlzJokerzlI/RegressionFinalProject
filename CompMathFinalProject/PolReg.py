@@ -18,6 +18,7 @@ class PolReg(Reg):
 
 
 
+    # Polynomial regression calculations
     def __calcPolReg(self):
         for order in range(self.__minOrder, self.__maxOrder + 1):
             self.__coeffDict[str(order)] = self._calcCoeff(self._xList, self._yList, order)
@@ -93,7 +94,7 @@ class PolReg(Reg):
         return -1
 
     
-    # Get linear coefficient
+    # Get coefficient
     def getCoeff(self):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
@@ -109,7 +110,7 @@ class PolReg(Reg):
         return self.__stdErrDict
 
 
-    # Get list of y axes in linear regression line
+    # Get list of y axes of regression line
     def getReg(self):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
@@ -117,7 +118,7 @@ class PolReg(Reg):
         return self.__regDict
 
 
-    # Predict y axes at linear regression with given x
+    # Predict y axes at regression line with given x
     def f(self, x:float, order:int):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
@@ -143,6 +144,10 @@ class PolReg(Reg):
 
         fig, ax = plt.subplots(figsize = (20,15))
 
+        # Title
+        ax.set_title(f"Linear Regression Graph\nrange({xList.min()} - {xList.max()})")
+
+        # Plot line graph
         for key in self.__regDict:
             ax.plot(xList, self.__regDict[key].astype(float),
                     label = f"Order {key}",
@@ -150,6 +155,7 @@ class PolReg(Reg):
                     markersize = 10,
                     zorder = 0.5)
                 
+        # Plot scatter graph
         ax.scatter(xList, yList,
                    label = "Sample Data",
                    marker = "o",
@@ -158,10 +164,14 @@ class PolReg(Reg):
                    alpha = 0.8,
                    zorder =1)
 
+        # Legend
         ax.legend(title = "Legend",
                   fontsize = "large")
 
+        # Grid
         ax.grid(which = "both")
+
+        # Ticks
         ax.xaxis.set_major_locator(FixedLocator(xList))
         ax.yaxis.set_major_locator(FixedLocator(yList))
         ax.xaxis.set_minor_locator(AutoMinorLocator(4))

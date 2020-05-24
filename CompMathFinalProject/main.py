@@ -8,6 +8,7 @@ import math
 from LinReg import LinReg
 from PolReg import PolReg
 from ExpReg import ExpReg
+from InOut import InOut
 
 # xList:np.ndarray = np.array([0.7, 0.96, 1.13, 1.57, 1.92])
 # yList:np.ndarray = np.array([0.19, 0.21, 0.23, 0.25, 0.31])
@@ -17,20 +18,20 @@ from ExpReg import ExpReg
 
 # coordList:np.ndarray = np.array([[80,6.47], [40,6.24], [-40,5.72], [-120,5.09], [-200, 4.30], [-280, 3.33]])
 
-xList:np.ndarray = np.array([0,1,3,5,7,9])
-yList:np.ndarray = np.array([1,0.891,0.708,0.562,0.447,0.355])
-
+inOut:InOut = InOut()
+xList, yList = inOut.read("x.csv")
 
 a:LinReg = LinReg()
-b:PolReg = PolReg()
-c:ExpReg = ExpReg()
+# b:PolReg = PolReg()
+# c:ExpReg = ExpReg()
 
 # a.insertList(xList, yList)
 # a.plot()
 
-# b.insertList(xList, yList, 2)
-# print(b.getReg())
+# b.insertList(xList, yList, 2,5)
+# print(b.plot())
 
 # c.insertList(xList, yList)
 # c.plot()
+
 
