@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from decimal import Decimal as Dec
@@ -8,6 +9,7 @@ from Reg import Reg
 
 
 class ExpReg(Reg):
+    # Data
     __order:int = 1
 
     __coeffList:np.ndarray
@@ -17,6 +19,7 @@ class ExpReg(Reg):
 
 
 
+    # Exponential regression calculations
     def __calcExpReg(self):
         f = lambda x : x.ln()
         vf = np.vectorize(f)
@@ -35,56 +38,69 @@ class ExpReg(Reg):
             print("Invalid lists type! Must be numpy.ndarray type!")
             return -1
 
-        if (yList.size == 0):
+        if (len(yList) == 0):
             # Conditions for coordinateList input
-            if (xList.size == 0):
+            if (len(xList) == 0):
                 # Return -1 if both xList and yList are empty
                 print("Empty List!")
-            elif (not isinstance(xList[0], np.ndarray) or xList[0].size != 2):
+            elif (len(xList) < 2):
+                # Return -1 if the data in the lists are less than 2 (results in insufficient data)
+                print("Insufficient data in lists!")
+            elif (not isinstance(xList[0], np.ndarray) or len(xList[0]) != 2):
                 # Return -1 if xList's elements are not numpy.ndarray, which means there is at least one data has different size (turns np.ndarray type to list)
                 # Return -1 if coordinate has insufficient or extra axes
                 print("Invalid Amount of Axes! A Coordinate must only contain (x,y) axes!")
             elif(xList[:,1].min() <= 0):
+                # Exponential y value must be more than 0
                 print("Invalid y value! Please make sure elements in y list is more than 0!")
             else:
                 try:
                     # Make input x and y axes in coordinateList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
+
+                    # Set the number of data points
+                    self._numOfData = len(self._xList)
+                    self.__calcExpReg()
+                    return 0
                 except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
-                finally:
-                    # Set the number of data points
-                    self._numOfData = self._xList.size
-                    self.__calcExpReg()
-                    return 0
+                except:
+                    print("Unexpected error!")
+                    print(sys.exc_info()[0])
+                    return np.array([]), np.array([])
         else:
             # Conditions for xList and yList input
             if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
                 # Return -1 if type list, tuple, dict, or numpy.ndarray exist in either xList of yList
                 print("Lists contain invalid data type!")
-            elif (xList.size != yList.size):
+            elif (len(xList) != len(yList)):
                 # Return -1 if xList is not the same size as yList
                 print("Lists are unaligned!")
-            elif (xList.size < 2):
+            elif (len(xList) < 2):
                 # Return -1 if the data in the lists are less than 2 (results in insufficient data)
                 print("Insufficient data in lists!")
             elif(yList.min() <= 0):
+                # Exponential y value must be more than 0
                 print("Invalid y value! Please make sure elements in y list is more than 0!")
             else:
                 try:
                     # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
+
+                    # Set the number of data points
+                    self._numOfData = len(self._xList)
+                    self.__calcExpReg()
+                    return 0
                 except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
-                finally:
-                    # Set the number of data points
-                    self._numOfData = self._xList.size
-                    self.__calcExpReg()
-                    return 0
+                except:
+                    print("Unexpected error!")
+                    print(sys.exc_info()[0])
+                    return np.array([]), np.array([])
         return -1
 
     
@@ -93,7 +109,7 @@ class ExpReg(Reg):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__regList
+        return self.__coeffList
 
 
     # Get standard error
@@ -117,10 +133,13 @@ class ExpReg(Reg):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        x:Dec = Dec(str(x))
-        power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec)
-
-        return np.multiply(np.power(np.full(1 + 1, x), power), self.__coeffList.transpose()).sum()
+        x:Dec = Dec(str(x)) # Change the type to Decimal
+        power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec) # The power of x
+        tempList:np.ndarray = np.full(1 + 1, x, dtype = Dec)
+        if (tempList[0] == 0):
+            # Change first index value to 1 if it is 0, Dec(0)**Dec(0) produces error
+            tempList[0] = Dec("1")
+        return np.multiply(np.power(tempList, power), self.__coeffList.transpose()).sum()
 
 
     # Plot

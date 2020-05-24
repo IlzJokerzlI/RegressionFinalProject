@@ -13,7 +13,7 @@ class Reg:
 
     # Calculates standard error
     def _calcStdErr(self, yList:np.ndarray, regList:np.ndarray):
-        return np.sqrt(np.power(np.subtract(regList, yList), 2).sum() / (yList.size - 2))
+        return np.sqrt(np.power(np.subtract(regList, yList), 2).sum() / (len(yList) - 2)) if (len(yList) -2) > 0 else 0
 
 
     # Naive Gauss Elimination Linear Algebra
@@ -71,9 +71,9 @@ class Reg:
 
     # Calculates y axes in polynomial regression line of given x axes
     def _calcReg(self, xList:np.ndarray, coeffList:np.ndarray, order:int):
-        tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self._numOfData), dtype = Dec), xList).transpose() # Create temporary matrix for list of x
         power:np.ndarray = np.arange(0, order + 1, dtype = Dec) # The power of the x
-        tempMatrix[:,0][tempMatrix[:,0] == 0] = Dec(1)
+        tempMatrix:np.ndarray = np.multiply(np.ones((order + 1, self._numOfData), dtype = Dec), xList).transpose() # Create temporary matrix for list of x
+        tempMatrix[:,0][tempMatrix[:,0] == 0] = Dec(1) # Change first index value to 1 if it is 0, Dec(0)**Dec(0) produces error
 
         return np.sum(np.multiply(np.power(tempMatrix, power), coeffList.transpose()), axis = 1)
 

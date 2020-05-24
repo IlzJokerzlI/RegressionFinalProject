@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from decimal import Decimal as Dec
@@ -8,6 +9,7 @@ from Reg import Reg
 
 
 class PolReg(Reg):
+    # Data
     __minOrder:int
     __maxOrder:int
 
@@ -33,12 +35,16 @@ class PolReg(Reg):
             print("Invalid lists type! Must be numpy.ndarray type!")
             return -1
 
-        if (yList.size == 0):
+        if (len(yList) == 0):
             # Conditions for coordinateList input
-            if (xList.size == 0):
+            if (len(xList) == 0):
                 # Return -1 if both xList and yList are empty
                 print("Empty List!")
-            elif (not isinstance(xList[0], np.ndarray) or xList[0].size != 2):
+            elif (len(xList) < 3):
+                # Return -1 if the data in the lists are less than 3 (results in insufficient data)
+                print("Insufficient data in lists!")
+                return 0
+            elif (not isinstance(xList[0], np.ndarray) or len(xList[0]) != 2):
                 # Return -1 if xList's elements are not numpy.ndarray, which means there is at least one data has different size (turns np.ndarray type to list)
                 # Return -1 if coordinate has insufficient or extra axes
                 print("Invalid Amount of Axes! A Coordinate must only contain (x,y) axes!")
@@ -47,34 +53,7 @@ class PolReg(Reg):
                     # Make input x and y axes in coordinateList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
-                except DecimalException as e:
-                    # Catch unknown error from Decimal object
-                    print(f"Error: {str(e)}")
-                finally:
-                    # Set the number of data points
-                    self._numOfData = self._xList.size
-                    self.__calcPolReg()
-                    return 0
-        else:
-            # Conditions for xList and yList input
-            if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
-                # Return -1 if type list, tuple, dict, or numpy.ndarray exist in either xList of yList
-                print("Lists contain invalid data type!")
-            elif (xList.size != yList.size):
-                # Return -1 if xList is not the same size as yList
-                print("Lists are unaligned!")
-            elif (xList.size < 2):
-                # Return -1 if the data in the lists are less than 2 (results in insufficient data)
-                print("Insufficient data in lists!")
-            else:
-                try:
-                    # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
-                    self._xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
-                    self._yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
-                except DecimalException as e:
-                    # Catch unknown error from Decimal object
-                    print(f"Error: {str(e)}")
-                finally:
+
                     if (minOrder < 2):
                         self.__minOrder = 2
                     else:
@@ -88,9 +67,58 @@ class PolReg(Reg):
 
 
                     # Set the number of data points
-                    self._numOfData = self._xList.size
+                    self._numOfData = len(self._xList)
                     self.__calcPolReg()
                     return 0
+                except DecimalException as e:
+                    # Catch unknown error from Decimal object
+                    print(f"Error: {str(e)}")
+                except:
+                    print("Unexpected error!")
+                    print(sys.exc_info()[0])
+                    return np.array([]), np.array([])
+        else:
+            # Conditions for xList and yList input
+            if (True in [isinstance(x, (list, tuple, dict, np.ndarray)) for x in xList] or True in [isinstance(y, (list, tuple, dict, np.ndarray)) for y in yList]):
+                # Return -1 if type list, tuple, dict, or numpy.ndarray exist in either xList of yList
+                print("Lists contain invalid data type!")
+            elif (len(xList) != len(yList)):
+                # Return -1 if xList is not the same size as yList
+                print("Lists are unaligned!")
+            elif (len(xList) < 3):
+                # Return -1 if the data in the lists are less than 3 (results in insufficient data)
+                print("Insufficient data in lists!")
+            else:
+                try:
+                    # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
+                    self._xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
+                    self._yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
+
+                    if (minOrder < 2):
+                        # Check if minimum order is less than 2
+                        self.__minOrder = 2
+                    else:
+                        self.__minOrder = minOrder
+
+
+                    if (maxOrder < self.__minOrder):
+                        # Check if maximum order is less than minimum order
+                        self.__maxOrder = self.__minOrder
+                    else:
+                        self.__maxOrder = maxOrder
+
+
+                    # Set the number of data points
+                    self._numOfData = len(self._xList)
+                    self.__calcPolReg()
+                    return 0
+                except DecimalException as e:
+                    # Catch unknown error from Decimal object
+                    print(f"Error: {str(e)}")
+                except:
+                    print("Unexpected error!")
+                    print(sys.exc_info()[0])
+                    return np.array([]), np.array([])
         return -1
 
     
@@ -99,7 +127,7 @@ class PolReg(Reg):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__regDict
+        return self.__coeffDict
 
 
     # Get standard error
@@ -125,13 +153,18 @@ class PolReg(Reg):
             return np.array([])
 
         if (not (str(order) in self.__coeffDict)):
+            # Check if the order is exist in the list
             print(f"Coefficient with order of {order} does not exist! Please re-insert the data by including order {order}!")
 
 
-        x:Dec = Dec(str(x))
-        power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec)
+        x:Dec = Dec(str(x)) # Change the type to Decimal
+        power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec) # The power of x
+        tempList:np.ndarray = np.full(1 + 1, x, dtype = Dec)
+        if (tempList[0] == 0):
+            # Change first index value to 1 if it is 0, Dec(0)**Dec(0) produces error
+            tempList[0] = Dec("1")
 
-        return np.multiply(np.power(np.full(1 + 1, x), power), self.__coeffDict[str(order)].transpose()).sum()
+        return np.multiply(np.power(tempList, power), self.__coeffDict[str(order)].transpose()).sum()
 
 
     # Plot
