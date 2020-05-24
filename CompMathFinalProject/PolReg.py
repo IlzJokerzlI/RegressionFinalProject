@@ -6,23 +6,25 @@ from Reg import Reg
 
 
 class PolReg(Reg):
-    __order:int
+    __minOrder:int
+    __maxOrder:int
 
-    __coeffList:np.ndarray
-    __regList:np.ndarray
-    __stdErr:Dec = Dec("0")
+    __coeffDict:dict = {}
+    __regDict:dict = {}
+    __stdErrDict:dict = {}
 
 
 
 
     def __calcPolReg(self):
-        self.__coeffList = self._calcCoeff(self._xList, self._yList, self.__order)
-        self.__regList = self._calcReg(self._xList, self.__coeffList, self.__order)
-        self.__stdErr = self._calcStdErr(self._yList, self.__regList)
+        for order in range(self.__minOrder, self.__maxOrder + 1):
+            self.__coeffDict[str(order)] = self._calcCoeff(self._xList, self._yList, order)
+            self.__regDict[str(order)] = self._calcReg(self._xList, self.__coeffDict[str(order)], order)
+            self.__stdErrDict = self._calcStdErr(self._yList, self.__regDict[str(order)])
 
 
     # Inserting xList and yList
-    def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([]), order:int = 2):
+    def insertList(self, xList:np.ndarray, yList:np.ndarray = np.array([]), minOrder:int = 2, maxOrder = 2):
         if (not isinstance(xList, np.ndarray) or not isinstance(yList, np.ndarray)):
             # Return -1 if xList or yList is not numpy.ndarray type
             print("Invalid lists type! Must be numpy.ndarray type!")
@@ -42,14 +44,12 @@ class PolReg(Reg):
                     # Make input x and y axes in coordinateList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
-                    return 0
                 except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
                 finally:
                     # Set the number of data points
                     self._numOfData = self._xList.size
-                    self.__order = order
                     self.__calcPolReg()
                     return 0
         else:
@@ -68,14 +68,24 @@ class PolReg(Reg):
                     # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
-                    return 0
                 except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
                 finally:
+                    if (minOrder < 2):
+                        self.__minOrder = 2
+                    else:
+                        self.__minOrder = minOrder
+
+
+                    if (maxOrder < self.__minOrder):
+                        self.__maxOrder = self.__minOrder
+                    else:
+                        self.__maxOrder = maxOrder
+
+
                     # Set the number of data points
                     self._numOfData = self._xList.size
-                    self.__order = order
                     self.__calcPolReg()
                     return 0
         return -1
@@ -86,7 +96,7 @@ class PolReg(Reg):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__regList
+        return self.__regDict
 
 
     # Get standard error
@@ -94,7 +104,7 @@ class PolReg(Reg):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__stdErr
+        return self.__stdErrDict
 
 
     # Get list of y axes in linear regression line
@@ -102,15 +112,20 @@ class PolReg(Reg):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
-        return self.__regList
+        return self.__regDict
 
 
     # Predict y axes at linear regression with given x
-    def f(self, x:float):
+    def f(self, x:float, order:int):
         if (self._numOfData == 0):
             print("Empty List! Please insert list beforehand!")
             return np.array([])
+
+        if (not (str(order) in self.__coeffDict)):
+            print(f"Coefficient with order of {order} does not exist! Please re-insert the data by including order {order}!")
+
+
         x:Dec = Dec(str(x))
         power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec)
 
-        return np.multiply(np.power(np.full(1 + 1, x), power), self.__coeffList.transpose()).sum()
+        return np.multiply(np.power(np.full(1 + 1, x), power), self.__coeffDict[str(order)].transpose()).sum()

@@ -1,4 +1,4 @@
-#%%
+
 import numpy as np
 import pandas as pd
 import matplotlib as plt
@@ -22,12 +22,15 @@ yList:np.ndarray = np.array([1,0.891,0.708,0.562,0.447,0.355])
 
 
 a:LinReg = LinReg()
+b:PolReg = PolReg()
 c:ExpReg = ExpReg()
 
-a.insertList(xList, yList)
-a.plot()
+# a.insertList(xList, yList)
+# a.plot()
 
-c.insertList(xList, yList)
-c.plot()
+# b.insertList(xList, yList, 2)
+# print(b.getReg())
 
-# %%
+# c.insertList(xList, yList)
+# c.plot()
+

@@ -44,7 +44,6 @@ class LinReg(Reg):
                     # Make input x and y axes in coordinateList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
-                    return 0
                 except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
@@ -69,7 +68,6 @@ class LinReg(Reg):
                     # Make input xList and yList as object's variable (converts int, string, or float to Decimal data type)
                     self._xList = np.array([Dec(str(x)) for x in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(y)) for y in yList], dtype = Dec)
-                    return 0
                 except DecimalException as e:
                     # Catch unknown error from Decimal object
                     print(f"Error: {str(e)}")
