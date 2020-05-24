@@ -1,6 +1,8 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from decimal import Decimal as Dec
 from decimal import DecimalException
+from matplotlib.ticker import FixedLocator, AutoMinorLocator
 
 from Reg import Reg
 
@@ -129,3 +131,41 @@ class PolReg(Reg):
         power:np.ndarray = np.arange(0, 1 + 1, dtype = Dec)
 
         return np.multiply(np.power(np.full(1 + 1, x), power), self.__coeffDict[str(order)].transpose()).sum()
+
+
+    # Plot
+    def plot(self):
+        if (self._numOfData == 0):
+            print("Empty List! Please insert list beforehand!")
+            return -1
+        xList = self._xList.astype(float)
+        yList = self._yList.astype(float)
+
+        fig, ax = plt.subplots(figsize = (20,15))
+
+        for key in self.__regDict:
+            ax.plot(xList, self.__regDict[key].astype(float),
+                    label = f"Order {key}",
+                    marker = "x",
+                    markersize = 10,
+                    zorder = 0.5)
+                
+        ax.scatter(xList, yList,
+                   label = "Sample Data",
+                   marker = "o",
+                   s = 30,
+                   c = "red",
+                   alpha = 0.8,
+                   zorder =1)
+
+        ax.legend(title = "Legend",
+                  fontsize = "large")
+
+        ax.grid(which = "both")
+        ax.xaxis.set_major_locator(FixedLocator(xList))
+        ax.yaxis.set_major_locator(FixedLocator(yList))
+        ax.xaxis.set_minor_locator(AutoMinorLocator(4))
+        ax.yaxis.set_minor_locator(AutoMinorLocator(10))
+
+        plt.show()
+        return 0
