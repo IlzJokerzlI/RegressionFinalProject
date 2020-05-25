@@ -25,7 +25,7 @@ class PolReg(Reg):
         for order in range(self.__minOrder, self.__maxOrder + 1):
             self.__coeffDict[str(order)] = self._calcCoeff(self._xList, self._yList, order)
             self.__regDict[str(order)] = self._calcReg(self._xList, self.__coeffDict[str(order)], order)
-            self.__stdErrDict = self._calcStdErr(self._yList, self.__regDict[str(order)])
+            self.__stdErrDict[str(order)] = self._calcStdErr(self._yList, self.__regDict[str(order)])
 
 
     # Inserting xList and yList
