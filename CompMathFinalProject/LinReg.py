@@ -8,22 +8,27 @@ from matplotlib.ticker import FixedLocator, AutoMinorLocator
 from Reg import Reg
 
 
+"""
+    LinReg Class
+
+    LinReg stands for Linear Regression, it is a class that inherits from Reg class and specialized for handling linear regression. Linear regression has a formula of {y = mx + c} where m is the gradient and c is the constant. Being the first order polynomial regression, the linear regression has less rules when compared to polynomial regression as well as exponential regression.
+"""
 class LinReg(Reg):
     # Data
-    __order:int = 1
+    __order:int = 1 # The linear regression is the first order of polynomial
 
-    __coeffList:np.ndarray
-    __regList:np.ndarray
-    __stdErr:Dec = Dec("0")
+    __coeffList:np.ndarray # Stores the list of coefficients namely the gradient(m) and constant(c)
+    __regList:np.ndarray # Stores the list of regression values
+    __stdErr:Dec = Dec("0") # Stores the standard error
 
 
 
 
     # Linear regression calculations
     def __calcLinReg(self):
-        self.__coeffList = self._calcCoeff(self._xList, self._yList, self.__order)
-        self.__regList = self._calcReg(self._xList, self.__coeffList, self.__order)
-        self.__stdErr = self._calcStdErr(self._yList, self.__regList)
+        self.__coeffList = self._calcCoeff(self._xList, self._yList, self.__order) # Calculates the coefficients of linear regression namely gradient(m) and constant(c)
+        self.__regList = self._calcReg(self._xList, self.__coeffList, self.__order) # Calculates the regression values
+        self.__stdErr = self._calcStdErr(self._yList, self.__regList) # Calculates and assigns the standard error
 
 
     # Inserting xList and yList
@@ -155,16 +160,16 @@ class LinReg(Reg):
 
         # Plot scatter graph
         ax.scatter(xList, yList,
-                   label = "Sample Data",
-                   marker = "o",
-                   s = 30,
-                   c = "red",
-                   alpha = 0.8,
-                   zorder =1)
+                    label = "Sample Data",
+                    marker = "o",
+                    s = 30,
+                    c = "red",
+                    alpha = 0.8,
+                    zorder =1)
 
         # Legend
         ax.legend(title = "Legend",
-                  fontsize = "large")
+                    fontsize = "large")
 
         # Grid
         ax.grid(which = "both")

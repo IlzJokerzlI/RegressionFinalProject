@@ -8,24 +8,30 @@ from matplotlib.ticker import FixedLocator, AutoMinorLocator
 from Reg import Reg
 
 
+"""
+    PolReg Class
+
+    PolReg stands for Polynomial Regression, it is a class that inherits from Reg class and specialized for handling polynomial order. Unlike the other children of Reg class, this class contains the regression result of multiple Polynomial order which are stored in the form of map. The polynomial regression has a formula of {y = a + bx + cx^2 + ... + nx^n} and needs at least 3 data in order for it to form a polynomial regression otherwise it will be a linear regression.
+"""
 class PolReg(Reg):
     # Data
-    __minOrder:int
-    __maxOrder:int
+    __minOrder:int #Minimal order
+    __maxOrder:int #Max order
 
-    __coeffDict:dict = {}
-    __regDict:dict = {}
-    __stdErrDict:dict = {}
+    __coeffDict:dict = {} #Stores coefficients of multiple polynomial order
+    __regDict:dict = {} #Stores regresssions of different order
+    __stdErrDict:dict = {} #Stores the Standard Errors of multiple polynomial order
 
 
 
 
     # Polynomial regression calculations
     def __calcPolReg(self):
+        # Different order of polynomial results in different coefficients, regression values, and standard errors. This iteration will iterates from the lowest order up until highest order of polynomial. Each of the results will be put into maps, the order being the key and the list of each coefficients, regression values, or standard errors being the map vallues.
         for order in range(self.__minOrder, self.__maxOrder + 1):
-            self.__coeffDict[str(order)] = self._calcCoeff(self._xList, self._yList, order)
-            self.__regDict[str(order)] = self._calcReg(self._xList, self.__coeffDict[str(order)], order)
-            self.__stdErrDict[str(order)] = self._calcStdErr(self._yList, self.__regDict[str(order)])
+            self.__coeffDict[str(order)] = self._calcCoeff(self._xList, self._yList, order) # Calculates the coefficients
+            self.__regDict[str(order)] = self._calcReg(self._xList, self.__coeffDict[str(order)], order) # Calculates the regression values
+            self.__stdErrDict[str(order)] = self._calcStdErr(self._yList, self.__regDict[str(order)]) # Calculates the standard errors
 
 
     # Inserting xList and yList
@@ -54,12 +60,14 @@ class PolReg(Reg):
                     self._xList = np.array([Dec(str(coord[0])) for coord in xList], dtype = Dec)
                     self._yList = np.array([Dec(str(coord[1])) for coord in xList], dtype = Dec)
 
+                    # If the minimal order is less than 2, it will set the the minimal order to 2 (which is the minimum). Else it will set the min order to the one being input.
                     if (minOrder < 2):
                         self.__minOrder = 2
                     else:
                         self.__minOrder = minOrder
 
 
+                    # If the max order is less than the minimal order, it will set the max order to the same value as the minimal order
                     if (maxOrder < self.__minOrder):
                         self.__maxOrder = self.__minOrder
                     else:
@@ -190,16 +198,16 @@ class PolReg(Reg):
                 
         # Plot scatter graph
         ax.scatter(xList, yList,
-                   label = "Sample Data",
-                   marker = "o",
-                   s = 30,
-                   c = "red",
-                   alpha = 0.8,
-                   zorder =1)
+                    label = "Sample Data",
+                    marker = "o",
+                    s = 30,
+                    c = "red",
+                    alpha = 0.8,
+                    zorder =1)
 
         # Legend
         ax.legend(title = "Legend",
-                  fontsize = "large")
+                    fontsize = "large")
 
         # Grid
         ax.grid(which = "both")

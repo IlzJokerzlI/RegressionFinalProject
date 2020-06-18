@@ -1,12 +1,16 @@
 import numpy as np
 from decimal import Decimal as Dec
 
+
+""" Reg Class
+    Reg stands for Regression. This class is the parent class of all types of regression in this program. It has the basic function in calculating a regression such as calculating standard error, naive gauss elimination linear algebra, calculates coefficient, and calculates regression value as these are shared similarly among the regression. The linear regression and polynomial regression being the closest relative in which linear regression is the first order regression, and leaving exponential regression which needs extra calculations in the ExpReg class.
+"""
 class Reg:
     # Data
     _numOfData:int = 0
 
-    _xList:np.ndarray = np.array([])
-    _yList:np.ndarray = np.array([])
+    _xList:np.ndarray = np.array([]) # The list of x data (independent variable)
+    _yList:np.ndarray = np.array([]) # The list of y data (actual dependent variable)
 
 
 

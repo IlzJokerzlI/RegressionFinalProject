@@ -8,27 +8,32 @@ from matplotlib.ticker import FixedLocator, AutoMinorLocator
 from Reg import Reg
 
 
+"""
+    ExpReg Class
+
+    ExpReg stands for Exponential Regression, it is a class that inherits from Reg class and specialized for handling exponential regression. The exponential regression has a formula of {y = ab^x} where a != 0 and y != 0 as it either reaches positive infinite or negative infinite as it is closer ot x = 0.
+"""
 class ExpReg(Reg):
     # Data
-    __order:int = 1
+    __order:int = 1 # There are no order in exponential regression, the order itself is a independent variable
 
-    __coeffList:np.ndarray
-    __regList:np.ndarray
-    __stdErr:Dec = Dec("0")
+    __coeffList:np.ndarray # Stores the list coefficients
+    __regList:np.ndarray # Stores the list of regression values
+    __stdErr:Dec = Dec("0") # Stores the standard error
 
 
 
 
     # Exponential regression calculations
     def __calcExpReg(self):
-        f = lambda x : x.ln()
-        vf = np.vectorize(f)
+        f = lambda x : x.ln() # Method responsible in convert the value of x to its ln
+        vf = np.vectorize(f) # Vectorize the f function
 
-        temp:np.ndarray = self._calcCoeff(self._xList, vf(self._yList), self.__order)
-        temp[0][0] = temp[0][0].exp()
-        self.__coeffList = temp
+        temp:np.ndarray = self._calcCoeff(self._xList, vf(self._yList), self.__order) # Calculates and gets the values of coefficients of a linear ex.
+        temp[0][0] = temp[0][0].exp() # Sets the first index of the list to its exponential value
+        self.__coeffList = temp # Assigning this class' coefficient list after the coefficient has been calculated
         self.__regList = np.multiply(np.exp(np.multiply(self.__coeffList[1][0], self._xList)), self.__coeffList[0][0])
-        self.__stdErr = self._calcStdErr(self._yList, self.__regList)
+        self.__stdErr = self._calcStdErr(self._yList, self.__regList) # Calculates and gets the standard error
 
 
     # Inserting xList and yList
@@ -165,16 +170,16 @@ class ExpReg(Reg):
 
         # Plot scatter graph
         ax.scatter(xList, yList,
-                   label = "Sample Data",
-                   marker = "o",
-                   s = 30,
-                   c = "red",
-                   alpha = 0.8,
-                   zorder =1)
+                    label = "Sample Data",
+                    marker = "o",
+                    s = 30,
+                    c = "red",
+                    alpha = 0.8,
+                    zorder =1)
 
         # Legend
         ax.legend(title = "Legend",
-                  fontsize = "large")
+                    fontsize = "large")
 
         # Grid
         ax.grid(which = "both")
