@@ -32,7 +32,7 @@ class ExpReg(Reg):
         temp:np.ndarray = self._calcCoeff(self._xList, vf(self._yList), self.__order) # Calculates and gets the values of coefficients of a linear ex.
         temp[0][0] = temp[0][0].exp() # Sets the first index of the list to its exponential value
         self.__coeffList = temp # Assigning this class' coefficient list after the coefficient has been calculated
-        self.__regList = np.multiply(np.exp(np.multiply(self.__coeffList[1][0], self._xList)), self.__coeffList[0][0])
+        self.__regList = np.multiply(np.exp(np.multiply(self.__coeffList[1][0], self._xList)), self.__coeffList[0][0]) # Calculates regression values
         self.__stdErr = self._calcStdErr(self._yList, self.__regList) # Calculates and gets the standard error
 
 
