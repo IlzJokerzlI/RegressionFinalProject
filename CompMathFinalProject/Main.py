@@ -73,7 +73,7 @@ def menuAddData(option:str, linReg:LinReg, expReg:ExpReg, polReg:PolReg):
     maxOrder:int = 2 # Sets the max order same as min order (standard value)
 
 
-    if (option == "1" or option == "2"):
+    if (option == "1" or option == "2" or option == "3"):
         while (True):
             print("\n\n=== Polynomial Order ===\n")
             try:
@@ -81,7 +81,7 @@ def menuAddData(option:str, linReg:LinReg, expReg:ExpReg, polReg:PolReg):
                 temp:np.ndarray = np.array(input("Please input order of polynomial [min, max]: ").split(","))
 
                 if (temp[0] == "cancel"):
-                    return -1
+                    return 2
                 elif (len(temp) == 1 and temp[0] == ""):
                     break
                 elif (len(temp) == 1):
@@ -102,6 +102,7 @@ def menuAddData(option:str, linReg:LinReg, expReg:ExpReg, polReg:PolReg):
                 print("\nINVALID INPUT!\n")
 
 
+        # Add Data Manualy Menu
         if (option == "1"):
             coordList:list = []
             value:str = ""
@@ -118,7 +119,7 @@ def menuAddData(option:str, linReg:LinReg, expReg:ExpReg, polReg:PolReg):
                     polReg.insertList(np.array(coordList), minOrder = minOrder, maxOrder = maxOrder)
                     return 0
                 elif (value == "cancel"):
-                    return -1
+                    return 2
                 else:
                     try:
                         tempCoord:np.array = np.array(value.split(",")).astype(float)
@@ -130,16 +131,20 @@ def menuAddData(option:str, linReg:LinReg, expReg:ExpReg, polReg:PolReg):
                         print("\nINVALID INPUT!\n")
 
 
-        elif (option == "2"):
+        # Add Data From File Menu
+        elif (option == "2" or "3"):
             inOut:InOut = InOut()
             xList:np.ndarray = np.array([])
             yList:np.ndarray = np.array([])
 
             while (True):
-                print("\n\n=== Add Data From File ===")
+                print(("\n\n=== Add Data From File ===" if (option == "2") else "\n\n=== Add Data From Formated File ===\nNOTE: The csv file available is only for covid_19_data.csv because it is fixed. It can be changed inside InOut.py"))
                 fileName:str = ""
                 fileName = input ("Please input file name (path): ")
-                xList, yList = inOut.readStandard(fileName)
+                if (option == "2"):
+                    xList, yList = inOut.readStandard(fileName)
+                elif (option == "3"):
+                    xList, yList = inOut.readComplex(fileName)
 
                 if (xList.size != 0 and yList.size != 0):
                     linReg.insertList(xList, yList)
@@ -152,7 +157,7 @@ def menuAddData(option:str, linReg:LinReg, expReg:ExpReg, polReg:PolReg):
                         if (option == "y"):
                             break
                         elif (option == "n"):
-                            return -1
+                            return 2
                         else:
                             print("\nINVALID OPTION!\n")
 
@@ -186,7 +191,7 @@ def main():
         if (option == "1"):
             while (True):
                 print("\n\n=== Add Data ===")
-                print("[1] Add Manually\n[2] Add from existing CSV file\n[9] Back\n[0] Exit")
+                print("[1] Add Manually\n[2] Add from CSV file\n[3] Add from formated CSV file\n[9] Back\n[0] Exit")
                 option = input("Please input option: ")
                 
                 result = menuAddData(option, linReg, expReg, polReg)
@@ -194,8 +199,10 @@ def main():
                     isDataFilled = True
                 elif (result == -1):
                     break
-                else:
+                elif (result == 1):
                     return 0
+                else:
+                    pass
                 
 
         # Second Option (Plot Data Menu)
